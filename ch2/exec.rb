@@ -36,6 +36,15 @@ require_relative './simple'
 #   { x: Number.new(3), y: Number.new(4) }
 # ).run
 
-statement = Assign.new(:x, Add.new(Variable.new(:x), Number.new(1)))
-environment = { x: Number.new(2) }
-Machine.new(statement, environment).run
+# statement = Assign.new(:x, Add.new(Variable.new(:x), Number.new(1)))
+# environment = { x: Number.new(2) }
+# Machine.new(statement, environment).run
+
+Machine.new(
+  If.new(
+    Variable.new(:x),
+    Assign.new(:y, Number.new(1)),
+    Assign.new(:y, Number.new(2))
+  ),
+  { x: Boolean.new(true) }
+).run

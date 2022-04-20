@@ -1,3 +1,5 @@
+require 'pry'
+
 class Machine < Struct.new(:statement, :environment)
   def step
     self.statement, self.environment = statement.reduce(environment)
@@ -165,7 +167,34 @@ class Assign < Struct.new(:name, :expression)
     if expression.reducible?
       [Assign.new(name, expression.reduce(environment)), environment]
     else
-      [DoNothing.new, environment.merge({ name => expression })]
+      [DoNothing.new, environment.merge({ name => expression })] # assignするとは環境への変化を加えること
+    end
+  end
+end
+
+class If < Struct.new(:condition, :consequence, :alternative)
+  def to_s
+    "if (#{condition}) { #{consequence} } else { #{alternative} }"
+  end
+
+  def inspect
+    "«#{self}»"
+  end
+
+  def reducible?
+    true
+  end
+
+  def reduce(environment)
+    if condition.reducible?
+      [If.new(condition.reduce(environment), consequence, alternative), environment]
+    else # conditionはこれ以上簡約できず、評価可能な状態となっている
+      case condition
+      when Boolean.new(true)
+        [consequence, environment] # consequence を statementとしてreturn
+      when Boolean.new(false)
+        [alternative, environment]
+      end
     end
   end
 end
