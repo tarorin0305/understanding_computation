@@ -40,11 +40,19 @@ require_relative './simple'
 # environment = { x: Number.new(2) }
 # Machine.new(statement, environment).run
 
+# Machine.new(
+#   If.new(
+#     Variable.new(:x),
+#     Assign.new(:y, Number.new(1)),
+#     Assign.new(:y, Number.new(2))
+#   ),
+#   { x: Boolean.new(true) }
+# ).run
+
 Machine.new(
-  If.new(
-    Variable.new(:x),
-    Assign.new(:y, Number.new(1)),
-    Assign.new(:y, Number.new(2))
+  Sequence.new(
+    Assign.new(:x, Add.new(Number.new(1), Number.new(1))),
+    Assign.new(:y, Add.new(Variable.new(:x), Number.new(3)))
   ),
-  { x: Boolean.new(true) }
+  {}
 ).run

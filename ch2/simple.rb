@@ -1,4 +1,4 @@
-require 'pry'
+require 'pry-byebug'
 
 class Machine < Struct.new(:statement, :environment)
   def step
@@ -195,6 +195,30 @@ class If < Struct.new(:condition, :consequence, :alternative)
       when Boolean.new(false)
         [alternative, environment]
       end
+    end
+  end
+end
+
+class Sequence < Struct.new(:first, :second)
+  def to_s
+    "#{first}; #{second}"
+  end
+
+  def inspect
+    "«#{self}»"
+  end
+
+  def reducible?
+    true
+  end
+
+  def reduce(environment)
+    case first
+    when DoNothing.new
+      [second, environment] # 第一引数 first の簡約が完了したら、第二引数 second を 第一引数 first として代入した Sequence インスタンスを作って処理を継続する
+    else
+      reduced_first, reduced_envitonment = first.reduce(environment)
+      [Sequence.new(reduced_first, second), reduced_envitonment]
     end
   end
 end
