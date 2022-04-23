@@ -1,4 +1,5 @@
 require_relative './simple'
+# require_relative './big_step'
 
 # Add.new(
 #   Multiply.new(Number.new(1), Number.new(2)),
@@ -49,10 +50,48 @@ require_relative './simple'
 #   { x: Boolean.new(true) }
 # ).run
 
-Machine.new(
-  Sequence.new(
-    Assign.new(:x, Add.new(Number.new(1), Number.new(1))),
-    Assign.new(:y, Add.new(Variable.new(:x), Number.new(3)))
-  ),
-  {}
-).run
+# Machine.new(
+#   Sequence.new(
+#     Assign.new(:x, Add.new(Number.new(1), Number.new(1))),
+#     Assign.new(:y, Add.new(Variable.new(:x), Number.new(3)))
+#   ),
+#   {}
+# ).run
+
+# Machine.new(
+#   While.new(
+#     LessThan.new(Variable.new(:x), Number.new(5)),
+#     Assign.new(:x, Multiply.new(Variable.new(:x), Number.new(3)))
+#   ),
+#   { x: Number.new(1) }
+# ).run
+# p LessThan.new(
+#   Add.new(Variable.new(:x), Number.new(2)),
+#   Variable.new(:y)
+# ).evaluate({ x: Number.new(2), y: Number.new(5) })
+
+# statement = While.new(
+#   LessThan.new(Variable.new(:x), Number.new(5)),
+#   Assign.new(:x, Multiply.new(Variable.new(:x), Number.new(3)))
+# )
+# p statement
+# p statement.evaluate({ x: Number.new(1) })
+
+# str = Number.new(5).to_ruby
+# proc = eval(str)
+# p proc
+# p proc.call({})
+
+# expression = Variable.new(:x)
+# p expression
+# p expression.to_ruby
+# proc = eval(expression.to_ruby)
+# p proc
+# p proc.call({ x: 7 })
+
+# p Add.new(Variable.new(:x), Number.new(1)).to_ruby
+# p LessThan.new(Variable.new(:x), Number.new(5)).to_ruby
+
+environment = { x: 3 }
+proc = eval(Add.new(Variable.new(:x), Number.new(1)).to_ruby)
+p proc.call(environment)

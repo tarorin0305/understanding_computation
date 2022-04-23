@@ -26,6 +26,14 @@ class Number < Struct.new(:value)
   def reducible?
     false
   end
+
+  def evaluate(_environment)
+    self
+  end
+
+  def to_ruby
+    "-> e { #{value.inspect} }"
+  end
 end
 
 class Add < Struct.new(:left, :right)
@@ -49,6 +57,14 @@ class Add < Struct.new(:left, :right)
     else
       Number.new(left.value + right.value)
     end
+  end
+
+  def evaluate(environment)
+    Number.new(left.evaluate(environment).value + right.evaluate(environment).value)
+  end
+
+  def to_ruby
+    "-> e { (#{left.to_ruby}).call(e) + (#{right.to_ruby}).call(e) }"
   end
 end
 
@@ -74,6 +90,14 @@ class Multiply < Struct.new(:left, :right)
       Number.new(left.value * right.value)
     end
   end
+
+  def evaluate(environment)
+    Number.new(left.evaluate(environment).value * right.evaluate(environment).value)
+  end
+
+  def to_ruby
+    "-> e { (#{left.to_ruby}).call(e) * (#{right.to_ruby}).call(e) }"
+  end
 end
 
 class Boolean < Struct.new(:value)
@@ -87,6 +111,14 @@ class Boolean < Struct.new(:value)
 
   def reducible?
     false
+  end
+
+  def evaluate(_environment)
+    self
+  end
+
+  def to_ruby
+    "-> e { #{value.inspect} }"
   end
 end
 
@@ -112,6 +144,14 @@ class LessThan < Struct.new(:left, :right)
       Boolean.new(left.value < right.value)
     end
   end
+
+  def evaluate(environment)
+    Boolean.new(left.evaluate(environment).value < right.evaluate(environment).value)
+  end
+
+  def to_ruby
+    "-> e { (#{left.to_ruby}).call(e) < (#{right.to_ruby}).call(e) }"
+  end
 end
 
 class Variable < Struct.new(:name)
@@ -130,6 +170,14 @@ class Variable < Struct.new(:name)
   def reduce(environment)
     environment[name]
   end
+
+  def evaluate(environment)
+    environment[name]
+  end
+
+  def to_ruby
+    "-> e { e[#{name.inspect}] }"
+  end
 end
 
 class DoNothing
@@ -147,6 +195,10 @@ class DoNothing
 
   def reducible?
     false
+  end
+
+  def evaluate(environment)
+    environment
   end
 end
 
@@ -169,6 +221,10 @@ class Assign < Struct.new(:name, :expression)
     else
       [DoNothing.new, environment.merge({ name => expression })] # assignするとは環境への変化を加えること
     end
+  end
+
+  def evaluate(environment)
+    environment.merge({ name => expression.evaluate(environment) })
   end
 end
 
@@ -197,6 +253,15 @@ class If < Struct.new(:condition, :consequence, :alternative)
       end
     end
   end
+
+  def evaluate(environment)
+    case condirion.evaluate(environment)
+    when Boolean.new(true)
+      consequence.evaluate(environment)
+    when Boolean.new(false)
+      alternative.evaluate(environment)
+    end
+  end
 end
 
 class Sequence < Struct.new(:first, :second)
@@ -219,6 +284,37 @@ class Sequence < Struct.new(:first, :second)
     else
       reduced_first, reduced_envitonment = first.reduce(environment)
       [Sequence.new(reduced_first, second), reduced_envitonment]
+    end
+  end
+
+  def evaluate(environment)
+    second.evaluate(first.evaluate(environment))
+  end
+end
+
+class While < Struct.new(:condition, :body)
+  def to_s
+    "while (#{condition}) { #{body} })"
+  end
+
+  def inspect
+    "«#{self}»"
+  end
+
+  def reducible?
+    true
+  end
+
+  def reduce(environment)
+    [If.new(condition, Sequence.new(body, self), DoNothing.new), environment]
+  end
+
+  def evaluate(environment)
+    case condition.evaluate(environment)
+    when Boolean.new(true)
+      evaluate(body.evaluate(environment))
+    when Boolean.new(false)
+      environment
     end
   end
 end
