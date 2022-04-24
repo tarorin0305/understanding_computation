@@ -92,6 +92,24 @@ require_relative './simple'
 # p Add.new(Variable.new(:x), Number.new(1)).to_ruby
 # p LessThan.new(Variable.new(:x), Number.new(5)).to_ruby
 
-environment = { x: 3 }
-proc = eval(Add.new(Variable.new(:x), Number.new(1)).to_ruby)
-p proc.call(environment)
+# environment = { x: 3 }
+# proc = eval(Add.new(Variable.new(:x), Number.new(1)).to_ruby)
+# p proc.call(environment)
+
+# statement = Assign.new(:y, Add.new(Variable.new(:x), Number.new(1)))
+# p statement
+# p statement.to_ruby
+# proc = eval(statement.to_ruby)
+# p proc
+# p proc.call({ x: 3 })
+
+statement =
+  While.new(
+    LessThan.new(Variable.new(:x), Number.new(5)),
+    Assign.new(:x, Multiply.new(Variable.new(:x), Number.new(3)))
+  )
+p statement
+p statement.to_ruby
+proc = eval(statement.to_ruby)
+p proc
+p proc.call({ x: 1 })

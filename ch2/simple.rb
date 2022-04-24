@@ -200,6 +200,10 @@ class DoNothing
   def evaluate(environment)
     environment
   end
+
+  def to_ruby
+    '-> e { e }'
+  end
 end
 
 class Assign < Struct.new(:name, :expression)
@@ -225,6 +229,10 @@ class Assign < Struct.new(:name, :expression)
 
   def evaluate(environment)
     environment.merge({ name => expression.evaluate(environment) })
+  end
+
+  def to_ruby
+    "-> e { e.merge({ #{name.inspect} => (#{expression.to_ruby}).call(e) }) }" # このprocの引数eにはハッシュが来ることを想定しており、このハッシュは環境を表現しているとみなす
   end
 end
 
@@ -255,12 +263,19 @@ class If < Struct.new(:condition, :consequence, :alternative)
   end
 
   def evaluate(environment)
-    case condirion.evaluate(environment)
+    case condition.evaluate(environment)
     when Boolean.new(true)
       consequence.evaluate(environment)
     when Boolean.new(false)
       alternative.evaluate(environment)
     end
+  end
+
+  def to_ruby
+    "-> e { if (#{condition.to_ruby}).call(e) " +
+      " then (#{consequence.to_ruby}).call(e)" +
+      " else (#{alternative.to_ruby}).call(e)" +
+      ' end }'
   end
 end
 
@@ -280,7 +295,7 @@ class Sequence < Struct.new(:first, :second)
   def reduce(environment)
     case first
     when DoNothing.new
-      [second, environment] # 第一引数 first の簡約が完了したら、第二引数 second を 第一引数 first として代入した Sequence インスタンスを作って処理を継続する
+      [second, environment] # 第一引��� first の簡約が完了したら、第二引数 second を 第一引数 first として代入した Sequence インスタンスを作って処理を継続する
     else
       reduced_first, reduced_envitonment = first.reduce(environment)
       [Sequence.new(reduced_first, second), reduced_envitonment]
@@ -289,6 +304,10 @@ class Sequence < Struct.new(:first, :second)
 
   def evaluate(environment)
     second.evaluate(first.evaluate(environment))
+  end
+
+  def to_ruby
+    "-> e { (#{second.to_ruby}).call(#{first.to_ruby}).call(e) }"
   end
 end
 
@@ -316,5 +335,12 @@ class While < Struct.new(:condition, :body)
     when Boolean.new(false)
       environment
     end
+  end
+
+  def to_ruby
+    '-> e {' +
+      "while (#{condition.to_ruby}).call(e); e = (#{body.to_ruby}).call(e); end;" +
+      'e' +
+      ' }'
   end
 end
