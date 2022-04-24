@@ -15,3 +15,6 @@ Style/EmptyMethod:
 
 Style/Semicolon:
   Enabled: false
+
+Style/StringConcatenation:
+  Enabled: false

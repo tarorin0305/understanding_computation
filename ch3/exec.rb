@@ -1,4 +1,5 @@
 require_relative './rule'
+require_relative './regular'
 
 # rulebook = DFARulebook.new([
 #                              FARule.new(1, 'a', 2), FARule.new(1, 'b', 1),
@@ -47,4 +48,12 @@ rulebook = NFARulebook.new([
                              FARule.new(5, 'a', 6),
                              FARule.new(6, 'a', 4)
                            ])
-p rulebook.next_states(Set[1], nil)
+rulebook.next_states(Set[1], nil)
+
+pattern = Repeat.new(
+  Choose.new(
+    Concatenate.new(Literal.new('a'), Literal.new('b')),
+    Literal.new('a')
+  )
+)
+p pattern
