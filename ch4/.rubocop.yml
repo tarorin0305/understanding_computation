@@ -1,0 +1,20 @@
+Style/StructInheritance:
+  Enabled: false
+
+Style/Documentation: 
+  Enabled: false
+
+Style/FrozenStringLiteralComment:
+  Enabled: false
+
+Naming/BinaryOperatorParameterName:
+  Enabled: false
+
+Style/EmptyMethod:
+  Enabled: false
+
+Style/Semicolon:
+  Enabled: false
+
+Style/StringConcatenation:
+  Enabled: false

@@ -50,10 +50,28 @@ rulebook = NFARulebook.new([
                            ])
 rulebook.next_states(Set[1], nil)
 
-pattern = Repeat.new(
-  Choose.new(
-    Concatenate.new(Literal.new('a'), Literal.new('b')),
-    Literal.new('a')
-  )
-)
+# pattern = Repeat.new(
+#   Choose.new(
+#     Concatenate.new(Literal.new('a'), Literal.new('b')),
+#     Literal.new('a')
+#   )
+# )
+# p pattern
+
+# nfa_design = Empty.new.to_nfa_design
+# p nfa_design.accepts?('')
+
+# p Empty.new.matches?('a')
+# p Empty.new.matches?('')
+# p Literal.new('a').matches?('a')
+# p Literal.new('a').matches?('')
+
+# pattern = Concatenate.new(Literal.new('a'), Literal.new('b'))
+# p pattern
+# p pattern.matches?('a')
+# p pattern.matches?('ab')
+# p pattern.matches?('abc')
+
+pattern = Repeat.new(Literal.new('a'))
 p pattern
+p pattern.matches?('a')
