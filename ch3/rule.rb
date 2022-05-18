@@ -1,11 +1,15 @@
 require 'set'
 
 # 現在のstate, 入力文字, 遷移先のstate の3つの情報で構成されるのが1つの規則
+# 規則を表現している。規則は関数
 class FARule < Struct.new(:state, :character, :next_state)
+  # オートマトンの現在の状態と、読み取った入力文字のペアに対して自身が適用可能な規則(＝関数)であるかを判定する
+  # FARuleは、stateとcharacterのペアを1組のみ持つ
   def applies_to?(state, character)
     self.state == state && self.character == character
   end
 
+  # 規則自身は、自分が応答可能な状態＆入力のペアを渡された際に、どの状態に遷移するかという情報をもっている。それがnext_stateというプロパティ。このメソッドではそのプロパティの値を返している
   def follow
     next_state
   end
@@ -15,21 +19,29 @@ class FARule < Struct.new(:state, :character, :next_state)
   end
 end
 
+# 規則を要素とする集合を表現している。規則集。
 class DFARulebook < Struct.new(:rules)
+  # 規則集のインスタンスは、現在の状態と入力された文字を受け取り、応答可能なただ一つの規則を探し出す。探索後、followmethodを呼び出して、その規則による応答を返す
   def next_state(state, character)
     rule_for(state, character).follow
   end
 
+  # 応答可能な規則の探索を行う
   def rule_for(state, character)
     rules.detect { |rule| rule.applies_to?(state, character) }
   end
 end
 
+# 状態を保持するオートマトンを表現するクラス
+# この決定性有限オートマトンは規則集と、現在の状態と、受理状態集合をプロパティとして持つ
 class DFA < Struct.new(:current_state, :accept_states, :rulebook)
+  # 現在状態が受理状態集合に含まれているかどうかを判定する
   def accepting?
     accept_states.include?(current_state)
   end
 
+  # オートマトンが読み込んだ文字と現在状態のペアに対して、規則集が応答する次の状態を返す関数
+  # 値を返すだけでなく、オートマトンが保持する現在状態の変更という副作用を持つ
   def read_character(character)
     self.current_state = rulebook.next_state(current_state, character)
   end
@@ -41,7 +53,9 @@ class DFA < Struct.new(:current_state, :accept_states, :rulebook)
   end
 end
 
+# 手動でいちいちオートマトンのインスタンスを生成しなくて済むように、インスタンス生成を内部で行なってくれる製造機クラスを表現している
 class DFADessign < Struct.new(:start_state, :accept_states, :rulebook)
+  # 使い捨てオートマトンを生成
   def to_dfa
     DFA.new(start_state, accept_states, rulebook)
   end
