@@ -67,22 +67,30 @@ end
 
 class NFARulebook < Struct.new(:rules)
   # 現時点でとりうる状態のリストを渡す
+  # 規則集は規則を要素とする集合だが、DFAと異なり、状態と入力のペアを要素とする集合とは単射の関係になっていない
+  # そのため、状態と入力のペアを規則集に渡すと、高々N個の規則が応答することになる(N>=0)
   def next_states(states, character)
     states.flat_map { |state| follow_rules_for(state, character) }.to_set
   end
 
+  # 応答可能な規則のリストを取得し、それぞれの規則によって飛ばされる状態のリストを返す
   def follow_rules_for(state, character)
+    # rules_for　が[]のときには、空の配列を返す
     rules_for(state, character).map(&:follow)
   end
 
+  # 状態と入力のペアに応答可能な規則のリストを返す
   def rules_for(state, character)
     rules.select { |rule| rule.applies_to?(state, character) } # detectではなくselectになっているのがDFAとの違い
   end
 
+  # 現在の状態からどんな自由移動をするかを、状態のリストとして返すメソッド
   def follow_free_moves(states)
+    # 自由移動後の状態のリストが more_states に入る
     more_states = next_states(states, nil) # nilを入力に渡すと遷移できる、自由移動後の状態のリストを返す
 
     # 現在状態のリストを引数としているので、現在状態のリストが自由移動後の状態のリストを包含している場合は、現在の状態のリストを返す
+    # next_statesで見つかった遷移後の状態に新しいものがある限りelseに入る
     if more_states.subset?(states)
       states
     else
@@ -95,12 +103,18 @@ class NFARulebook < Struct.new(:rules)
   end
 end
 
+# 非決定性有限オートマトンを表現するクラス
+# 取りうる状態が複数存在するので、current_states になっている
 class NFA < Struct.new(:current_states, :accept_states, :rulebook)
+  # 受理状態集合と、取りうる現在状態の集合との積集合を取り、1つでも重なりがあれば受理可能と判定している
+  # current_statesは、文字列の読み込みが完了したあとの最終状態を示しているといえる
   def accepting?
     (current_states & accept_states).any?
   end
 
   def read_character(character)
+    # current_statesは最初はstart_statesになっている
+    # current_statesと入力文字とのペアに応答できる規則を探し、それらの規則が遷移させうるstatesの集合をcurrent_statesに代入する
     self.current_states = rulebook.next_states(current_states, character)
   end
 
@@ -111,11 +125,17 @@ class NFA < Struct.new(:current_states, :accept_states, :rulebook)
   end
 
   def current_states
+    # superで、NFAインスタンス生成時に引数として渡されたcurrent_statesを取得している。その値をfollow_free_movesの引数としている。
     rulebook.follow_free_moves(super)
   end
 end
 
 class NFADesgin < Struct.new(:start_state, :accept_states, :rulebook)
+  # 文字列を読み込んでいった結果どんな状態を取り得るかのリストを取得したあと、受理状態リストとの重なりがあれば受理可能となりtrueを返す
+  # このメソッドの責務は３つ
+  # NFAを生成する
+  # NFAに文字列を読み込ませてNFAの状態を更新する
+  # NFAの最終状態が受理状態リストと重なっているかどうかを判定する
   def accepts?(string)
     to_nfa.tap { |nfa| nfa.read_string(string) }.accepting?
   end

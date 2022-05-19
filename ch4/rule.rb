@@ -142,6 +142,7 @@ class NFASimulation < Struct.new(:nfa_design)
   end
 end
 
+# スタックというデータ構造と操作を実装している
 class Stack < Struct.new(:contents)
   def push(character)
     Stack.new([character] + contents)
@@ -171,17 +172,21 @@ class PDAConfiguration < Struct.new(:state, :stack)
   end
 end
 
+# FARuleでは扱ってなかった、ポップする文字とプッシュする文字を規則が持つようになっている
 class PDARule < Struct.new(:state, :character, :next_state, :pop_character, :push_characters)
+  # 構成として渡された状態とスタックに対応する規則であるか判定
   def applies_to?(configuration, character)
-    state == configuration.state &&
-      pop_character == configuration.stack.top &&
-      self.character == character
+    state == configuration.state && # state比較
+      pop_character == configuration.stack.top && # 渡された構成のスタックのトップと、ポップで取り出すことになっている規則であるかを比較
+      self.character == character # 入力されたcharacterと規則が対応可能なcharacterとの比較
   end
 
+  # 新たな構成を返す
   def follow(configuration)
     PDAConfiguration.new(next_state, next_stack(configuration))
   end
 
+  # 現在のスタックをポップしたあと、pushする文字をスタックに追加する。スタックとしてのArrayを返す
   def next_stack(configuration)
     popped_stack = configuration.stack.pop
     push_characters.reverse.inject(popped_stack) { |stack, character| stack.push(character) }
@@ -227,6 +232,7 @@ class DPDA < Struct.new(:current_configuration, :accept_states, :rulebook)
     accept_states.include?(current_configuration.state)
   end
 
+  # 入力文字を読み込むことで、現在の構成を変更させる副作用を担う
   def read_character(character)
     self.current_configuration =
       next_configuration(character)
@@ -252,5 +258,61 @@ class DPDADesign < Struct.new(:start_state, :bottom_character, :accept_states, :
     start_stack = Stack.new([bottom_character])
     start_configuration = PDAConfiguration.new(start_state, start_stack)
     DPDA.new(start_configuration, accept_states, rulebook)
+  end
+end
+
+class NPDARulebook < Struct.new(:rules)
+  def next_configurations(configurations, character)
+    configurations.flat_map { |configuration| follow_rules_for(configuration, character) }.to_set
+  end
+
+  def follow_rules_for(configuration, character)
+    rules_for(configuration, character).map { |rule| rule.follow(configuration) }
+  end
+
+  def rules_for(configuration, character)
+    rules.select { |rule| rule.applies_to?(configuration, character) }
+  end
+
+  def follow_free_moves(configurations)
+    more_configurations = next_configurations(configurations, nil)
+    if more_configurations.subset?(configurations)
+      configurations
+    else
+      follow_free_moves(configurations + more_configurations)
+    end
+  end
+end
+
+class NPDA < Struct.new(:current_configurations, :accept_states, :rulebook)
+  def accepting?
+    current_configurations.any? { |configuration| accept_states.include?(configuration.state) }
+  end
+
+  def read_character(character)
+    self.current_configurations =
+      rulebook.next_configurations(current_configurations, character)
+  end
+
+  def read_string(string)
+    string.chars.each do |character|
+      read_character(character)
+    end
+  end
+
+  def current_configurations
+    rulebook.follow_free_moves(super)
+  end
+end
+
+class NPDADesign < Struct.new(:start_state, :bottom_character, :accept_states, :rulebook)
+  def accepts?(string)
+    to_npda.tap { |npda| npda.read_string(string) }.accepting?
+  end
+
+  def to_npda
+    start_stack = Stack.new([bottom_character])
+    start_configuration = PDAConfiguration.new(start_state, start_stack)
+    NPDA.new(Set[start_configuration], accept_states, rulebook)
   end
 end

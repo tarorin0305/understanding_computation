@@ -18,11 +18,11 @@ require_relative './regular'
 # dfa_dessign = DFADessign.new(1, [3], rulebook)
 # puts dfa_dessign.accepts?(input_string)
 
-rulebook = NFARulebook.new([
-                             FARule.new(1, 'a', 1), FARule.new(1, 'b', 1), FARule.new(1, 'b', 2),
-                             FARule.new(2, 'a', 3), FARule.new(2, 'b', 3),
-                             FARule.new(3, 'a', 4), FARule.new(3, 'b', 4)
-                           ])
+# rulebook = NFARulebook.new([
+#                              FARule.new(1, 'a', 1), FARule.new(1, 'b', 1), FARule.new(1, 'b', 2),
+#                              FARule.new(2, 'a', 3), FARule.new(2, 'b', 3),
+#                              FARule.new(3, 'a', 4), FARule.new(3, 'b', 4)
+#                            ])
 
 # p rulebook.next_states(Set[1], 'b')
 # p rulebook.next_states(Set[1, 2], 'a')
@@ -40,15 +40,15 @@ rulebook = NFARulebook.new([
 # p nfa_design.accepts?('bab')
 # p nfa_design.accepts?('bbabb')
 
-rulebook = NFARulebook.new([
-                             FARule.new(1, nil, 2), FARule.new(1, nil, 4),
-                             FARule.new(2, 'a', 3),
-                             FARule.new(3, 'a', 2),
-                             FARule.new(4, 'a', 5),
-                             FARule.new(5, 'a', 6),
-                             FARule.new(6, 'a', 4)
-                           ])
-rulebook.next_states(Set[1], nil)
+# rulebook = NFARulebook.new([
+#                              FARule.new(1, nil, 2), FARule.new(1, nil, 4),
+#                              FARule.new(2, 'a', 3),
+#                              FARule.new(3, 'a', 2),
+#                              FARule.new(4, 'a', 5),
+#                              FARule.new(5, 'a', 6),
+#                              FARule.new(6, 'a', 4)
+#                            ])
+# rulebook.next_states(Set[1], nil)
 
 # pattern = Repeat.new(
 #   Choose.new(
@@ -72,6 +72,12 @@ rulebook.next_states(Set[1], nil)
 # p pattern.matches?('ab')
 # p pattern.matches?('abc')
 
-pattern = Repeat.new(Literal.new('a'))
-p pattern
-p pattern.matches?('a')
+# pattern = Repeat.new(
+#   Choose.new(
+#     Concatenate.new(Literal.new('a'), Literal.new('b')),
+#     Literal.new('a')
+#   )
+# )
+# p pattern
+nfa_design = Empty.new.to_nfa_design
+nfa_design.accepts?('')
