@@ -1,4 +1,5 @@
 require_relative './analyzer'
+require_relative './machine'
 # rulebook = NFARulebook.new([
 #                              FARule.new(0, '(', 1), FARule.new(1, ')', 0),
 #                              FARule.new(1, '(', 2), FARule.new(2, ')', 1),
@@ -120,10 +121,37 @@ end
 # 2, "n", 2, "n", []
 # 2, "b", 2, "b", []
 # 2, "v", 2, "v", []
-puts token_rules
-stop_rule = PDARule.new(2, nil, 3, '$', ['$'])
-rulebook = NPDARulebook.new([start_rule, stop_rule] + symbol_rules + token_rules)
-npda_design = NPDADesign.new(1, '$', [3], rulebook)
-token_string = LexicalAnalyzer.new('while (x < 5) { x = x * 3 }').analyze.join
-p token_string
-p npda_design.accepts?(token_string)
+# puts token_rules
+# stop_rule = PDARule.new(2, nil, 3, '$', ['$'])
+# rulebook = NPDARulebook.new([start_rule, stop_rule] + symbol_rules + token_rules)
+# npda_design = NPDADesign.new(1, '$', [3], rulebook)
+# token_string = LexicalAnalyzer.new('while (x < 5) { x = x * 3 }').analyze.join
+# p token_string
+# p npda_design.accepts?(token_string)
+
+tape = Tape.new(%w[1 0 1], '1', [], '_')
+p tape.middle
+p tape.move_head_left
+rule = TMRule.new(1, '0', 2, '1', :right)
+p rule.applies_to?(TMConfiguration.new(1, Tape.new([], '0', [], '_')))
+p rule.applies_to?(TMConfiguration.new(1, Tape.new([], '1', [], '_')))
+p rule.follow(TMConfiguration.new(1, Tape.new([], '0', [], '_')))
+rulebook = DTMRulebook.new([
+                             TMRule.new(1, '0', 2, '1', :right),
+                             TMRule.new(1, '1', 1, '0', :left),
+                             TMRule.new(1, '_', 2, '1', :right),
+                             TMRule.new(2, '0', 2, '0', :right),
+                             TMRule.new(2, '1', 2, '1', :right),
+                             TMRule.new(2, '_', 3, '_', :left)
+                           ])
+configuration = TMConfiguration.new(1, tape)
+p configuration
+configuration = rulebook.next_configuration(configuration)
+p configuration
+dtm = DTM.new(TMConfiguration.new(1, tape), [3], rulebook)
+dtm.run
+p dtm.accepting?
+tape = Tape.new(%w[1 2 1], '1', [], '_')
+dtm = DTM.new(TMConfiguration.new(1, tape), [3], rulebook)
+dtm.run
+p dtm.stuck?
