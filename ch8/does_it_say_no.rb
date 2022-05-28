@@ -27,3 +27,11 @@ if evaluate_on_itself(program) == 'no'
 else
   print 'no'
 end
+
+def halts?(program, _input)
+  if program.include?('while true')
+    false
+  else
+    true
+  end
+end

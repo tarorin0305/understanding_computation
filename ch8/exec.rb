@@ -71,10 +71,13 @@ require_relative './file'
 # z = SKISymbol.new(:z)
 # p S.call(x, y, z)
 
-program = "puts 'hello world'"
-bytes_in_binary = program.bytes.map { |b| b.to_s(2).rjust(8, '0') }
-number = bytes_in_binary.join.to_i(2)
-bytes_in_binary = number.to_s(2).scan(/.+?(?=.{8}*\z)/)
-program = bytes_in_binary.map { |string| string.to_i(2).chr }.join
-eval program
-evaluate_on_itself('print $stdin.read.reverse')
+# program = "puts 'hello world'"
+# bytes_in_binary = program.bytes.map { |b| b.to_s(2).rjust(8, '0') }
+# number = bytes_in_binary.join.to_i(2)
+# bytes_in_binary = number.to_s(2).scan(/.+?(?=.{8}*\z)/)
+# program = bytes_in_binary.map { |string| string.to_i(2).chr }.join
+# eval program
+# evaluate_on_itself('print $stdin.read.reverse')
+
+input = $stdin.read
+puts input.upcase
